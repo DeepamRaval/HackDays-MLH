@@ -2,793 +2,625 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Analysis Result | H2S Stock Analyzer</title>
+<title>MLHTrade | Technical Analysis</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Chart.js for candlestick chart -->
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            DEFAULT: '#0284c7',
+            dark: '#0369a1',
+          }
+        }
+      }
+    }
+  }
+</script>
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 <style>
-:root {
-    --orange: #e77d26;
-    --light: #ebf0f1;
-    --gray: #bec4c6;
-    --blue: #344a5e;
-    --dark: #222d40;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Segoe UI", sans-serif;
-}
-
-body {
-    background: linear-gradient(135deg, var(--dark), var(--blue));
-    color: var(--light);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* ===== Header ===== */
-header {
-    padding: 20px 40px;
-    background: rgba(0,0,0,0.25);
-    backdrop-filter: blur(6px);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-header h1 {
-    color: var(--orange);
-}
-
-header a {
-    text-decoration: none;
-    color: var(--gray);
-    font-size: 14px;
-    transition: 0.3s;
-}
-
-header a:hover {
-    color: var(--orange);
-}
-
-/* ===== Main ===== */
-main {
-    flex: 1;
-    padding: 40px 25px;
-}
-
-.title {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.title h2 {
-    font-size: 30px;
-    margin-bottom: 8px;
-}
-
-.title p {
-    color: var(--gray);
-    font-size: 14px;
-}
-
-/* ===== Rows ===== */
-.row {
-    display: flex;
-    justify-content: center;
-    gap: 25px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-}
-
-/* ===== Cards ===== */
-.card {
-    background: var(--light);
-    color: var(--dark);
-    width: 280px;
-    border-radius: 18px;
-    padding: 25px;
-    text-align: center;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.35);
-    transition: 0.35s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, transparent, rgba(231,125,38,0.18), transparent);
-    opacity: 0;
-    transition: opacity 0.4s;
-}
-
-.card:hover::before {
-    opacity: 1;
-}
-
-.card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 30px 65px rgba(0,0,0,0.45);
-}
-
-.card h3 {
-    color: var(--blue);
-    margin-bottom: 12px;
-}
-
-.value {
-    font-size: 34px;
-    font-weight: 700;
-    color: var(--orange);
-    margin: 15px 0;
-}
-
-.desc {
-    font-size: 13px;
-    color: #555;
-}
-
-/* ===== Loading ===== */
-.loading {
-    height: 14px;
-    width: 70%;
-    margin: 10px auto 0;
-    border-radius: 10px;
-    background: linear-gradient(100deg, #ddd 40%, #f5f5f5 50%, #ddd 60%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
-}
-
-/* ===== Chart Card ===== */
-.chart-card {
-    background: var(--light);
-    color: var(--dark);
-    border-radius: 18px;
-    padding: 20px 25px 30px 25px;
-    margin: 10px auto 40px auto;
-    max-width: 900px;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-}
-
-.chart-card h3 {
-    color: var(--blue);
-    margin-bottom: 8px;
-}
-
-.chart-card p {
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 14px;
-}
-
-#priceChart {
-    max-height: 320px;
-}
-
-/* ===== Footer ===== */
-footer {
-    text-align: center;
-    padding: 15px;
-    font-size: 13px;
-    color: var(--gray);
-    background: rgba(0,0,0,0.25);
-}
-
-footer span {
-    color: var(--orange);
-    font-weight: 600;
-}
-
-/* ===== Signal Banner ===== */
-.signal-banner {
-    background: linear-gradient(135deg, var(--dark), var(--blue));
-    border-radius: 20px;
-    padding: 30px 40px;
-    margin: 30px auto 40px auto;
-    max-width: 600px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-    border: 3px solid transparent;
-    transition: all 0.3s ease;
-    animation: pulse 2s infinite;
-}
-
-.signal-banner.buy {
-    border-color: #00c853;
-    background: linear-gradient(135deg, rgba(0, 200, 83, 0.2), rgba(0, 200, 83, 0.1));
-    box-shadow: 0 20px 50px rgba(0, 200, 83, 0.3);
-}
-
-.signal-banner.sell {
-    border-color: #f44336;
-    background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1));
-    box-shadow: 0 20px 50px rgba(244, 67, 54, 0.3);
-}
-
-.signal-banner.hold {
-    border-color: #ffa726;
-    background: linear-gradient(135deg, rgba(255, 167, 38, 0.2), rgba(255, 167, 38, 0.1));
-    box-shadow: 0 20px 50px rgba(255, 167, 38, 0.3);
-}
-
-.signal-content {
-    text-align: center;
-}
-
-.signal-label {
-    font-size: 16px;
-    color: var(--gray);
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-weight: 600;
-}
-
-.signal-value {
-    font-size: 72px;
-    font-weight: 900;
-    margin: 15px 0;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    letter-spacing: 4px;
-}
-
-.signal-banner.buy .signal-value {
-    color: #00c853;
-    text-shadow: 0 4px 20px rgba(0, 200, 83, 0.5);
-}
-
-.signal-banner.sell .signal-value {
-    color: #f44336;
-    text-shadow: 0 4px 20px rgba(244, 67, 54, 0.5);
-}
-
-.signal-banner.hold .signal-value {
-    color: #ffa726;
-    text-shadow: 0 4px 20px rgba(255, 167, 38, 0.5);
-}
-
-.signal-subtitle {
-    font-size: 14px;
-    color: var(--gray);
-    margin-top: 8px;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
-}
-
-/* ===== AI Explanation Card ===== */
-.explanation-card {
-    background: var(--light);
-    color: var(--dark);
-    border-radius: 18px;
-    padding: 25px 30px;
-    margin: 30px auto 30px auto;
-    max-width: 900px;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-    border-left: 4px solid var(--orange);
-}
-
-.explanation-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid rgba(0,0,0,0.1);
-}
-
-.explanation-header h3 {
-    color: var(--blue);
-    margin: 0;
-    font-size: 22px;
-}
-
-.ai-badge {
-    background: linear-gradient(135deg, var(--orange), #ff9f45);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.explanation-content {
-    font-size: 15px;
-    line-height: 1.8;
-    color: #444;
-}
-
-.explanation-content p {
-    margin: 0;
-    text-align: justify;
-}
-
-.explanation-content p:not(:last-child) {
-    margin-bottom: 12px;
-}
-
-/* ===== Responsive ===== */
-@media(max-width: 900px) {
-    .card {
-        width: 90%;
-        max-width: 340px;
-    }
-}
+  body {
+    background-color: #0b0f17;
+  }
+  @keyframes radarSweep {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .radar-sweep {
+    animation: radarSweep 3s linear infinite;
+  }
 </style>
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col text-slate-100 font-sans antialiased">
 
-<header>
-    <h1>H2S Analyzer</h1>
-    <div>
-        <a href="/">← Back to Input</a>
-        <a href="/chat" style="margin-left: 20px;">💬 Chat Assistant</a>
-    </div>
+<!-- ── Navigation Bar ── -->
+<header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md px-6 sm:px-12 py-3.5 flex justify-between items-center sticky top-0 z-30">
+  <div class="flex items-center gap-3">
+    <a href="/" class="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center font-bold text-white tracking-wider text-sm shadow-sm hover:bg-sky-500 transition-colors">
+      M
+    </a>
+    <span class="text-white text-lg font-semibold tracking-tight">MLHTrade</span>
+    <span class="text-xs text-slate-500 font-medium px-2 py-0.5 rounded border border-slate-800 ml-1">Analysis</span>
+  </div>
+  <nav class="flex items-center gap-6 text-sm">
+    <a href="/" class="text-slate-400 hover:text-white transition-colors duration-150">← New Search</a>
+    <a href="/chat" class="text-slate-400 hover:text-white transition-colors duration-150">Assistant</a>
+    <a href="/history" class="text-slate-400 hover:text-white transition-colors duration-150">History</a>
+  </nav>
 </header>
 
-<main>
-    <div class="title">
-        <h2>Technical Indicators</h2>
-        <p id="stockInfo">Loading analysis...</p>
+<!-- ── Main Workspace ── -->
+<main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
+
+  <!-- Intuitive Interactive Loading Screen -->
+  <div id="loadingOverlay" class="flex flex-col items-center justify-center py-16 px-4">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col items-center shadow-2xl">
+      <!-- Radar scan visualizer -->
+      <div class="relative w-28 h-28 rounded-full border border-slate-700/80 flex items-center justify-center mb-6 overflow-hidden bg-slate-950">
+        <!-- Concentric circles -->
+        <div class="absolute w-20 h-20 rounded-full border border-slate-800"></div>
+        <div class="absolute w-12 h-12 rounded-full border border-slate-800"></div>
+        <div class="absolute w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>
+        <!-- Sweeping beam -->
+        <div class="absolute w-28 h-28 radar-sweep" style="background: conic-gradient(from 0deg, transparent 0deg, transparent 280deg, rgba(56, 189, 248, 0.25) 360deg);"></div>
+      </div>
+
+      <!-- Live Stage Status -->
+      <div class="text-center">
+        <h3 id="loadingStageTitle" class="text-base font-semibold text-slate-100 tracking-tight mb-1">
+          Connecting to Market Stream…
+        </h3>
+        <p id="loadingStageSubtitle" class="text-xs text-slate-400 font-mono mb-4">
+          Initiating historical quote extraction
+        </p>
+      </div>
+
+      <!-- Animated Progress Bar with Live Counter -->
+      <div class="w-full flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1.5">
+        <span id="loadingPercentLabel">Calculation Progress</span>
+        <span id="loadingPercentNum" class="text-sky-400 font-bold">12%</span>
+      </div>
+      <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800 mb-4">
+        <div id="loadingProgressBar" class="h-full bg-gradient-to-r from-sky-600 via-sky-400 to-emerald-400 rounded-full transition-all duration-300 ease-out" style="width: 12%;"></div>
+      </div>
+
+      <!-- Ticker Info Tag -->
+      <div class="flex items-center gap-2 text-[11px] text-slate-500 font-mono bg-slate-950 px-3 py-1 rounded border border-slate-800">
+        <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+        <span id="loadingStockTag">INSTRUMENT QUERY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content (hidden until loaded) -->
+  <div id="content" class="hidden flex flex-col gap-6">
+
+    <!-- Top Instrument Summary Bar -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 id="stockTitle" class="text-2xl font-bold text-white tracking-tight">—</h1>
+          <span id="signalBadge" class="px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-slate-800 text-slate-300">
+            SIGNAL: —
+          </span>
+        </div>
+        <p id="stockMeta" class="text-xs text-slate-400 mt-1 font-mono"></p>
+      </div>
+
+      <div class="flex items-center gap-6 divide-x divide-slate-800">
+        <div class="text-right pl-0">
+          <span class="text-[11px] uppercase tracking-wider text-slate-400 block font-medium">Last Close</span>
+          <span id="currentPriceDisplay" class="text-xl font-bold text-slate-100 font-mono">—</span>
+        </div>
+        <div class="text-right pl-6">
+          <span class="text-[11px] uppercase tracking-wider text-slate-400 block font-medium">Momentum / RSI</span>
+          <span id="rsiSummaryDisplay" class="text-xl font-bold text-slate-100 font-mono">—</span>
+        </div>
+        <div class="text-right pl-6">
+          <span class="text-[11px] uppercase tracking-wider text-slate-400 block font-medium">Risk Level</span>
+          <span id="riskDisplay" class="text-sm font-semibold text-slate-300 block mt-1">—</span>
+        </div>
+      </div>
     </div>
 
-    <!-- TRADING SIGNAL BANNER -->
-    <div class="signal-banner" id="signalBanner" style="display: none;">
-        <div class="signal-content">
-            <div class="signal-label">Trading Signal</div>
-            <div class="signal-value" id="signalValue">—</div>
-            <div class="signal-subtitle" id="signalSubtitle">Based on technical analysis</div>
-        </div>
+    <!-- Technical Indicators Panel (Organized Grid) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="bg-slate-900 border border-slate-800/90 rounded-lg p-3.5">
+        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">EMA (0.1)</span>
+        <span id="ema" class="text-base sm:text-lg font-bold text-slate-100 font-mono">—</span>
+        <span class="text-[11px] text-slate-500 block mt-0.5">Fast trend</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800/90 rounded-lg p-3.5">
+        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">SMA (Mean)</span>
+        <span id="sma" class="text-base sm:text-lg font-bold text-slate-100 font-mono">—</span>
+        <span class="text-[11px] text-slate-500 block mt-0.5">Base trend</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800/90 rounded-lg p-3.5">
+        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">RSI (14)</span>
+        <span id="rsi" class="text-base sm:text-lg font-bold text-slate-100 font-mono">—</span>
+        <span id="rsiState" class="text-[11px] text-slate-500 block mt-0.5">Neutral</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800/90 rounded-lg p-3.5">
+        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Volatility</span>
+        <span id="vol" class="text-base sm:text-lg font-bold text-slate-100 font-mono">—</span>
+        <span class="text-[11px] text-slate-500 block mt-0.5">Std dev variance</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800/90 rounded-lg p-3.5">
+        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Key Support</span>
+        <span id="support" class="text-base sm:text-lg font-bold text-emerald-400 font-mono">—</span>
+        <span class="text-[11px] text-slate-500 block mt-0.5">Local floor</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800/90 rounded-lg p-3.5">
+        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Key Resistance</span>
+        <span id="resistance" class="text-base sm:text-lg font-bold text-rose-400 font-mono">—</span>
+        <span class="text-[11px] text-slate-500 block mt-0.5">Local ceiling</span>
+      </div>
     </div>
 
-    <!-- FIRST ROW (3 CARDS) -->
-    <div class="row">
-        <div class="card">
-            <h3>EMA</h3>
-            <div class="value" id="ema">—</div>
-            <div class="loading" id="emaLoad"></div>
-            <p class="desc">Exponential Moving Average</p>
+    <!-- Chart Panel -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <!-- Chart Header with Live Cursor HUD Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-200">Price Action & Candlestick Structure</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Interactive OHLC candles with overlaid moving averages</p>
         </div>
 
-        <div class="card">
-            <h3>SMA</h3>
-            <div class="value" id="sma">—</div>
-            <div class="loading" id="smaLoad"></div>
-            <p class="desc">Simple Moving Average</p>
+        <!-- Legend and indicator toggles -->
+        <div class="flex items-center gap-3 text-xs text-slate-400">
+          <span class="inline-flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 bg-emerald-500 inline-block rounded-xs"></span> Bullish
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 bg-rose-500 inline-block rounded-xs"></span> Bearish
+          </span>
+          <span class="inline-flex items-center gap-1.5 ml-1">
+            <span class="w-2.5 h-0.5 bg-sky-400 inline-block"></span> EMA
+          </span>
+          <span class="inline-flex items-center gap-1.5 ml-1">
+            <span class="w-2.5 h-0.5 bg-amber-400 inline-block"></span> SMA
+          </span>
         </div>
+      </div>
 
-        <div class="card">
-            <h3>RSI</h3>
-            <div class="value" id="rsi">—</div>
-            <div class="loading" id="rsiLoad"></div>
-            <p class="desc">Relative Strength Index</p>
-        </div>
-    </div>
+      <!-- Clean Live Data Strip (Leaves graph fully visible at all times) -->
+      <div id="candleHud" class="bg-slate-950 border border-slate-800/80 rounded-lg px-3.5 py-2 mb-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs font-mono">
+        <div class="text-slate-400"><span class="text-slate-500">Date:</span> <span id="hudDate" class="text-slate-200">—</span></div>
+        <div class="text-slate-400"><span class="text-slate-500">O:</span> <span id="hudOpen" class="text-slate-200">—</span></div>
+        <div class="text-slate-400"><span class="text-slate-500">H:</span> <span id="hudHigh" class="text-slate-200">—</span></div>
+        <div class="text-slate-400"><span class="text-slate-500">L:</span> <span id="hudLow" class="text-slate-200">—</span></div>
+        <div class="text-slate-400"><span class="text-slate-500">C:</span> <span id="hudClose" class="text-slate-200 font-bold">—</span></div>
+        <div id="hudChangeContainer" class="ml-auto text-slate-400"><span id="hudDirection" class="px-1.5 py-0.5 rounded text-[11px]">Hover over candle</span></div>
+      </div>
 
-    <!-- SECOND ROW (2 CARDS) -->
-    <div class="row">
-        <div class="card">
-            <h3>Volatility</h3>
-            <div class="value" id="vol">—</div>
-            <div class="loading" id="volLoad"></div>
-            <p class="desc">Market Risk Measure</p>
-        </div>
-
-        <div class="card">
-            <h3>Support</h3>
-            <div class="value" id="support">—</div>
-            <div class="loading" id="supportLoad"></div>
-            <p class="desc">Strong Buying Zone</p>
-        </div>
-
-        <div class="card">
-            <h3>Resistance</h3>
-            <div class="value" id="resistance">—</div>
-            <div class="loading" id="resistanceLoad"></div>
-            <p class="desc">Strong Selling Zone</p>
-        </div>
-    </div>
-
-    <!-- AI EXPLANATION -->
-    <div class="explanation-card" id="explanationCard" style="display: none;">
-        <div class="explanation-header">
-            <h3>🤖 AI Analysis</h3>
-            <span class="ai-badge">Powered by Gemini</span>
-        </div>
-        <div class="explanation-content" id="explanationContent">
-            <p>Loading AI explanation...</p>
-        </div>
-    </div>
-
-    <!-- CANDLESTICK CHART -->
-    <div class="chart-card">
-        <h3>Price Action (Candlestick Chart)</h3>
-        <p id="chartSubtitle">OHLC candles with support &amp; resistance levels</p>
+      <!-- Canvas container with adequate height -->
+      <div class="relative w-full h-[400px]">
         <canvas id="priceChart"></canvas>
+      </div>
     </div>
+
+    <!-- Cortex AI Technical Synthesis -->
+    <div id="explanationCard" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-800/80 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-6 h-6 rounded bg-sky-950 border border-sky-800 flex items-center justify-center text-sky-400 text-xs font-mono font-bold">
+            AI
+          </div>
+          <h3 class="text-sm font-semibold text-slate-200">Cortex Synthesis (Llama 3.1)</h3>
+        </div>
+        <span class="text-[11px] text-slate-500">Autonomous Technical Breakdown</span>
+      </div>
+      <div id="explanationContent" class="text-xs sm:text-sm text-slate-300 leading-relaxed space-y-2"></div>
+    </div>
+
+  </div>
+
+  <!-- Error display -->
+  <div id="errorState" class="hidden bg-slate-900 border border-rose-900/60 rounded-xl p-8 text-center max-w-lg mx-auto">
+    <div class="w-10 h-10 rounded-full bg-rose-950/80 border border-rose-800 text-rose-400 flex items-center justify-center mx-auto mb-3 text-lg font-bold">!</div>
+    <h2 class="text-slate-100 font-semibold mb-1.5">Analysis Request Failed</h2>
+    <p id="errorMsg" class="text-xs sm:text-sm text-rose-300 mb-5 leading-relaxed"></p>
+    <a href="/" class="inline-block bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-4 py-2 rounded-lg transition-colors">
+      ← Return to Search
+    </a>
+  </div>
+
 </main>
 
-<footer>
-    ⚠️ <span>Disclaimer:</span> Educational purpose only. No financial advice.
+<!-- Footer -->
+<footer class="border-t border-slate-900 bg-slate-950/50 py-3 text-center text-xs text-slate-500 mt-auto">
+  MLHTrade is designed for financial education and computational research.
 </footer>
 
 <script>
-// Get URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-const stock = urlParams.get('stock');
-const dateFrom = urlParams.get('date_from');
-const dateTo = urlParams.get('date_to');
+const params = new URLSearchParams(window.location.search);
+const stock    = params.get('stock');
+const dateFrom = params.get('date_from');
+const dateTo   = params.get('date_to');
 
-// Fetch analysis data from backend
+const $ = id => document.getElementById(id);
+function showEl(id) { $(id).classList.remove('hidden'); }
+function hideEl(id) { $(id).classList.add('hidden'); }
+
+// Dynamic continuous stage indicator for the intuitive loading screen
+let loadingInterval = null;
+let currentProgress = 12;
+
+function startLoadingVisualizer(symbol) {
+  $('loadingStockTag').textContent = `${symbol.toUpperCase()} • ${dateFrom} TO ${dateTo}`;
+  currentProgress = 12;
+  $('loadingProgressBar').style.width = '12%';
+  $('loadingPercentNum').textContent = '12%';
+
+  const stages = [
+    { title: "Querying Market Data…", sub: "Fetching historical prices & OHLC metrics", maxPct: 35 },
+    { title: "Computing Indicators…", sub: "Calculating EMA, SMA, RSI & volatility variance", maxPct: 60 },
+    { title: "Identifying Structure…", sub: "Isolating local support floors & resistance ceilings", maxPct: 80 },
+    { title: "Consulting Snowflake Cortex…", sub: "Generating autonomous LLM market synthesis", maxPct: 96 },
+  ];
+
+  let stageIdx = 0;
+  $('loadingStageTitle').textContent = stages[0].title;
+  $('loadingStageSubtitle').textContent = stages[0].sub;
+
+  loadingInterval = setInterval(() => {
+    // Increase progress smoothly
+    if (currentProgress < 95) {
+      // Step increment
+      const increment = Math.max(1, Math.floor(Math.random() * 4) + 1);
+      currentProgress = Math.min(95, currentProgress + increment);
+      $('loadingProgressBar').style.width = currentProgress + '%';
+      $('loadingPercentNum').textContent = currentProgress + '%';
+
+      // Update stage subtitle depending on progress threshold
+      if (currentProgress >= stages[stageIdx].maxPct && stageIdx < stages.length - 1) {
+        stageIdx++;
+        $('loadingStageTitle').textContent = stages[stageIdx].title;
+        $('loadingStageSubtitle').textContent = stages[stageIdx].sub;
+      }
+    }
+  }, 400);
+}
+
+function stopLoadingVisualizer() {
+  if (loadingInterval) {
+    clearInterval(loadingInterval);
+    loadingInterval = null;
+  }
+  // Complete bar to 100%
+  $('loadingProgressBar').style.width = '100%';
+  $('loadingPercentNum').textContent = '100%';
+}
+
 async function loadAnalysis() {
-    if (!stock || !dateFrom || !dateTo) {
-        document.getElementById('stockInfo').textContent = 'Please provide stock symbol and dates';
-        return;
-    }
-    
-    document.getElementById('stockInfo').textContent = `Analyzing ${stock} from ${dateFrom} to ${dateTo}...`;
-    
-    try {
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-        
-        const response = await fetch(`/api/analyze?stock=${encodeURIComponent(stock)}&date_from=${dateFrom}&date_to=${dateTo}`, {
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-            document.getElementById('stockInfo').textContent = `Error: ${errorData.error || 'Failed to fetch analysis'}`;
-            document.getElementById('stockInfo').style.color = '#f44336';
-            return;
-        }
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            document.getElementById('stockInfo').textContent = `Error: ${data.error}`;
-            document.getElementById('stockInfo').style.color = '#f44336';
-            return;
-        }
-        
-        // Update stock info
-        document.getElementById('stockInfo').textContent =
-            `${stock} • Current: ₹${data.current_price} • Trend: ${data.trend}`;
-        document.getElementById('stockInfo').style.color = '';
-        
-        // Update and display signal banner
-        updateSignalBanner(data.signal, data.trend, data.rsi, data.risk);
-        
-        // Display AI explanation if available
-        if (data.ai_explanation) {
-            displayAIExplanation(data.ai_explanation);
-        }
-        
-        // Update indicators
-        update("ema", data.ema.toFixed(2), "emaLoad");
-        update("sma", data.sma.toFixed(2), "smaLoad");
-        update("rsi", data.rsi.toFixed(2), "rsiLoad");
-        update("vol", `${data.volatility_percent.toFixed(2)}%`, "volLoad");
-        update("support", data.support.toFixed(2), "supportLoad");
-        update("resistance", data.resistance ? data.resistance.toFixed(2) : "—", "resistanceLoad");
+  if (!stock || !dateFrom || !dateTo) {
+    showError("Please specify a stock symbol, start date, and end date.");
+    return;
+  }
 
-        // Render candlestick chart if data available
-        if (data.chart && Array.isArray(data.chart.ohlc) && data.chart.ohlc.length > 0) {
-            // Store OHLC data for the chart
-            window.chartOHLCData = data.chart.ohlc;
-            renderCandlestickChart(data.chart.ohlc, data.support, data.resistance, data.current_price);
-        } else {
-            document.getElementById('chartSubtitle').textContent =
-                'Chart unavailable for this range (no OHLC data returned).';
-        }
+  // Client check before requesting
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (dateFrom > todayStr || dateTo > todayStr) {
+    showError("Future dates are not allowed. Please enter a valid date range up to today.");
+    return;
+  }
+  if (dateFrom > dateTo) {
+    showError("Start date cannot be after End date. Please select a valid date range.");
+    return;
+  }
 
-    } catch (error) {
-        console.error('Error:', error);
-        let errorMessage = 'Error loading analysis. ';
-        if (error.name === 'AbortError') {
-            errorMessage += 'Request timed out. The analysis is taking too long. Please try again or check your stock symbol and dates.';
-        } else if (error.message) {
-            errorMessage += error.message;
-        } else {
-            errorMessage += 'Please try again.';
-        }
-        document.getElementById('stockInfo').textContent = errorMessage;
-        document.getElementById('stockInfo').style.color = '#f44336';
-    }
-}
+  startLoadingVisualizer(stock);
 
-function update(id, value, loader) {
-    const element = document.getElementById(id);
-    const loaderElement = document.getElementById(loader);
-    if (element) {
-        element.innerText = value;
-    }
-    if (loaderElement) {
-        loaderElement.style.display = "none";
-    }
-}
+  try {
+    const res = await fetch(`/api/analyze?stock=${encodeURIComponent(stock)}&date_from=${dateFrom}&date_to=${dateTo}`);
+    const data = await res.json();
 
-function updateSignalBanner(signal, trend, rsi, risk) {
-    const banner = document.getElementById('signalBanner');
-    const signalValue = document.getElementById('signalValue');
-    const signalSubtitle = document.getElementById('signalSubtitle');
-    
-    if (!banner || !signalValue || !signalSubtitle) return;
-    
-    // Remove existing classes
-    banner.className = 'signal-banner';
-    
-    // Set signal value
-    signalValue.textContent = signal.toUpperCase();
-    
-    // Add appropriate class and styling based on signal
-    if (signal.toUpperCase() === 'BUY') {
-        banner.classList.add('buy');
-        signalSubtitle.textContent = `Strong buying opportunity • RSI: ${rsi.toFixed(1)} • Risk: ${risk}`;
-    } else if (signal.toUpperCase() === 'SELL') {
-        banner.classList.add('sell');
-        signalSubtitle.textContent = `Consider selling • RSI: ${rsi.toFixed(1)} • Risk: ${risk}`;
+    stopLoadingVisualizer();
+
+    if (!res.ok || data.error) {
+      showError(data.error || `HTTP ${res.status}: Failed to analyze`);
+      return;
+    }
+
+    hideEl('loadingOverlay');
+    showEl('content');
+
+    // Title and Meta
+    $('stockTitle').textContent = stock.toUpperCase();
+    $('stockMeta').textContent = `Range: ${dateFrom} → ${dateTo} | Trend: ${data.trend.toUpperCase()}`;
+    $('currentPriceDisplay').textContent = `₹${data.current_price.toFixed(2)}`;
+    $('rsiSummaryDisplay').textContent = `${data.rsi.toFixed(1)} (${data.momentum})`;
+    $('riskDisplay').textContent = data.risk;
+
+    // Signal Badge styling
+    const sBadge = $('signalBadge');
+    sBadge.textContent = `${data.signal} SIGNAL`;
+    if (data.signal === 'BUY') {
+      sBadge.className = 'px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-emerald-950 border border-emerald-800 text-emerald-400';
+    } else if (data.signal === 'SELL') {
+      sBadge.className = 'px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-rose-950 border border-rose-800 text-rose-400';
     } else {
-        banner.classList.add('hold');
-        signalSubtitle.textContent = `Wait and watch • RSI: ${rsi.toFixed(1)} • Risk: ${risk}`;
-    }
-    
-    // Show banner
-    banner.style.display = 'block';
-}
-
-function displayAIExplanation(explanation) {
-    const explanationCard = document.getElementById('explanationCard');
-    const explanationContent = document.getElementById('explanationContent');
-    
-    if (!explanationCard || !explanationContent) return;
-    
-    // Format the explanation (split into paragraphs if it contains newlines)
-    const formattedExplanation = explanation
-        .split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => `<p>${line.trim()}</p>`)
-        .join('');
-    
-    explanationContent.innerHTML = formattedExplanation || `<p>${explanation}</p>`;
-    explanationCard.style.display = 'block';
-}
-
-let priceChart = null;
-
-function renderCandlestickChart(ohlcData, support, resistance, currentPrice) {
-    const ctx = document.getElementById('priceChart').getContext('2d');
-
-    // Destroy existing chart if any
-    if (priceChart) {
-        priceChart.destroy();
+      sBadge.className = 'px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-amber-950 border border-amber-800 text-amber-400';
     }
 
-    // Extract labels
-    const labels = ohlcData.map(d => d.x);
-    const closePrices = ohlcData.map(d => d.c);
+    // Key Indicators
+    $('ema').textContent = `₹${data.ema.toFixed(2)}`;
+    $('sma').textContent = `₹${data.sma.toFixed(2)}`;
+    $('rsi').textContent = data.rsi.toFixed(1);
+    $('rsiState').textContent = data.momentum;
+    $('vol').textContent = `${data.volatility_percent.toFixed(2)}%`;
+    $('support').textContent = `₹${data.support.toFixed(2)}`;
+    $('resistance').textContent = data.resistance ? `₹${data.resistance.toFixed(2)}` : '—';
 
-    // Create datasets for Chart.js
-    const datasets = [
+    // Chart
+    if (data.chart && data.chart.ohlc && data.chart.ohlc.length > 0) {
+      renderProfessionalChart(data.chart.ohlc, data.support, data.resistance, data.ema, data.sma);
+    }
+
+    // AI Synthesis formatted cleanly
+    if (data.ai_explanation) {
+      $('explanationContent').innerHTML = formatAnalysisExplanation(data.ai_explanation);
+      showEl('explanationCard');
+    }
+
+  } catch (err) {
+    stopLoadingVisualizer();
+    showError(err.message || "An unexpected network error occurred while fetching analysis.");
+  }
+}
+
+function formatAnalysisExplanation(text) {
+  if (!text) return '';
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+
+  for (let l of lines) {
+    let clean = l.trim();
+    if (!clean) continue;
+
+    // Format markdown bold
+    let formattedLine = clean
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-100 font-semibold">$1</strong>')
+      .replace(/\bBUY\b/g, '<span class="text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-[11px]">BUY</span>')
+      .replace(/\bSELL\b/g, '<span class="text-rose-400 font-bold px-1.5 py-0.5 rounded bg-rose-950 border border-rose-800 text-[11px]">SELL</span>')
+      .replace(/\bHOLD\b/g, '<span class="text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950 border border-amber-800 text-[11px]">HOLD</span>');
+
+    if (clean.startsWith('•') || clean.startsWith('*') || clean.startsWith('-') || /^\d+\./.test(clean)) {
+      if (!inList) {
+        html += '<ul class="space-y-1.5 my-2">';
+        inList = true;
+      }
+      let content = formattedLine.replace(/^[•*-]\s*/, '').replace(/^\d+\.\s*/, '');
+      html += `<li class="flex items-start gap-2.5"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 mt-2 flex-shrink-0"></span><span class="text-slate-300">${content}</span></li>`;
+    } else {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      html += `<p class="text-slate-300 leading-relaxed mb-2">${formattedLine}</p>`;
+    }
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+function showError(msg) {
+  stopLoadingVisualizer();
+  hideEl('loadingOverlay');
+  hideEl('content');
+  $('errorMsg').textContent = msg;
+  showEl('errorState');
+}
+
+let activeChart = null;
+
+function renderProfessionalChart(ohlcData, support, resistance, ema, sma) {
+  const ctx = $('priceChart').getContext('2d');
+  const labels = ohlcData.map(d => d.x);
+  const closes = ohlcData.map(d => d.c);
+
+  // Initialize HUD with the latest candle values
+  const lastCandle = ohlcData[ohlcData.length - 1];
+  updateHud(lastCandle);
+
+  if (activeChart) {
+    activeChart.destroy();
+  }
+
+  activeChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
         {
-            label: 'Support',
-            data: labels.map(() => support),
-            borderColor: '#00c853',
-            backgroundColor: 'rgba(0, 200, 83, 0.1)',
-            borderDash: [8, 4],
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false,
+          label: 'EMA',
+          data: labels.map(() => ema),
+          borderColor: '#38bdf8', // Sky 400
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          fill: false,
         },
         {
-            label: 'Resistance',
-            data: labels.map(() => resistance),
-            borderColor: '#f44336',
-            backgroundColor: 'rgba(244, 67, 54, 0.1)',
-            borderDash: [8, 4],
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false,
+          label: 'SMA',
+          data: labels.map(() => sma),
+          borderColor: '#fbbf24', // Amber 400
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          fill: false,
         },
         {
-            label: 'Close Price',
-            data: closePrices,
-            borderColor: '#e77d26',
-            backgroundColor: 'rgba(231, 125, 38, 0.1)',
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.1,
-            fill: false,
+          label: 'Support Zone',
+          data: labels.map(() => support),
+          borderColor: 'rgba(16, 185, 129, 0.4)', // Emerald
+          borderWidth: 1.5,
+          borderDash: [2, 2],
+          pointRadius: 0,
+          fill: false,
         },
         {
-            label: 'Current Price',
-            data: labels.map((_, idx) => idx === labels.length - 1 ? currentPrice : null),
-            borderColor: '#ffffff',
-            backgroundColor: '#ffffff',
-            borderWidth: 2,
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            pointBackgroundColor: '#ffffff',
-            pointBorderColor: '#e77d26',
-            pointBorderWidth: 2,
+          label: 'Resistance Zone',
+          data: labels.map(() => resistance),
+          borderColor: 'rgba(244, 63, 94, 0.4)', // Rose
+          borderWidth: 1.5,
+          borderDash: [2, 2],
+          pointRadius: 0,
+          fill: false,
+        },
+        {
+          label: 'Close Price',
+          data: closes,
+          borderColor: 'transparent',
+          pointRadius: 0,
+          fill: false,
         }
-    ];
-
-    // Store OHLC data in chart data for plugin access
-    const chartData = {
-        labels: labels,
-        datasets: datasets,
-        ohlcData: ohlcData
-    };
-
-    priceChart = new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 12,
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const datasetLabel = context.dataset.label || '';
-                            const value = context.parsed.y;
-                            const index = context.dataIndex;
-                            
-                            // Show OHLC data in tooltip
-                            if (datasetLabel === 'Close Price' && ohlcData[index]) {
-                                const ohlc = ohlcData[index];
-                                return [
-                                    `Open: ₹${ohlc.o.toFixed(2)}`,
-                                    `High: ₹${ohlc.h.toFixed(2)}`,
-                                    `Low: ₹${ohlc.l.toFixed(2)}`,
-                                    `Close: ₹${ohlc.c.toFixed(2)}`,
-                                    ohlc.c >= ohlc.o ? '📈 Bullish' : '📉 Bearish'
-                                ];
-                            }
-                            
-                            return `${datasetLabel}: ₹${value.toFixed(2)}`;
-                        }
-                    },
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 12
-                    },
-                    displayColors: true
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        maxTicksLimit: 12,
-                        font: {
-                            size: 10
-                        }
-                    },
-                    grid: {
-                        display: false
-                    }
-                },
-                y: {
-                    position: 'right',
-                    ticks: {
-                        callback: (value) => `₹${value.toFixed(0)}`,
-                        font: {
-                            size: 11
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.08)',
-                        drawBorder: false
-                    }
-                }
+      ],
+      ohlcData: ohlcData
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        // We use the HUD bar above the chart to show live candle data without covering any part of the graph!
+        tooltip: {
+          enabled: false,
+          external: function(context) {
+            const tooltipModel = context.tooltip;
+            if (!tooltipModel || tooltipModel.opacity === 0) return;
+            if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
+              const idx = tooltipModel.dataPoints[0].dataIndex;
+              const candle = ohlcData[idx];
+              if (candle) {
+                updateHud(candle);
+              }
             }
+          }
         }
-    });
-
-    // Draw candlesticks manually on canvas
-    drawCandlesticks(ctx, priceChart, ohlcData);
-}
-
-function drawCandlesticks(ctx, chart, ohlcData) {
-    const meta = chart.getDatasetMeta(2); // Close Price dataset
-    const xScale = chart.scales.x;
-    const yScale = chart.scales.y;
-    
-    if (!meta || !xScale || !yScale) return;
-    
-    const barWidth = Math.max(3, (xScale.width / ohlcData.length) * 0.5);
-    
-    ctx.save();
-    
-    ohlcData.forEach((candle, index) => {
-        const x = xScale.getPixelForValue(index);
-        const openY = yScale.getPixelForValue(candle.o);
-        const highY = yScale.getPixelForValue(candle.h);
-        const lowY = yScale.getPixelForValue(candle.l);
-        const closeY = yScale.getPixelForValue(candle.c);
-        
-        const isBullish = candle.c >= candle.o;
-        const color = isBullish ? '#00c853' : '#f44336';
-        
-        ctx.strokeStyle = color;
-        ctx.fillStyle = color;
-        ctx.lineWidth = 1;
-        
-        // Draw high-low wick
-        ctx.beginPath();
-        ctx.moveTo(x, highY);
-        ctx.lineTo(x, lowY);
-        ctx.stroke();
-        
-        // Draw body rectangle
-        const bodyTop = Math.min(openY, closeY);
-        const bodyBottom = Math.max(openY, closeY);
-        const bodyHeight = Math.max(2, bodyBottom - bodyTop);
-        
-        ctx.fillRect(x - barWidth/2, bodyTop, barWidth, bodyHeight);
-        ctx.strokeRect(x - barWidth/2, bodyTop, barWidth, bodyHeight);
-    });
-    
-    ctx.restore();
-}
-
-// Hook into Chart.js animation to redraw candlesticks
-Chart.register({
-    id: 'candlestickOverlay',
-    afterDraw: (chart) => {
-        const ohlcData = chart.data.ohlcData;
-        if (ohlcData && ohlcData.length > 0) {
-            drawCandlesticks(chart.ctx, chart, ohlcData);
+      },
+      scales: {
+        x: {
+          grid: {
+            color: '#1e293b',
+            tickLength: 6
+          },
+          ticks: {
+            color: '#64748b',
+            font: { size: 10 },
+            maxTicksLimit: 12
+          }
+        },
+        y: {
+          position: 'right',
+          grid: {
+            color: '#1e293b'
+          },
+          ticks: {
+            color: '#94a3b8',
+            font: { size: 10, family: 'monospace' },
+            callback: function(val) {
+              return '₹' + val.toFixed(0);
+            }
+          }
         }
+      }
     }
+  });
+
+  drawCrispCandlesticks(ctx, activeChart, ohlcData);
+}
+
+function updateHud(candle) {
+  if (!candle) return;
+  $('hudDate').textContent = candle.x;
+  $('hudOpen').textContent = '₹' + candle.o.toFixed(2);
+  $('hudHigh').textContent = '₹' + candle.h.toFixed(2);
+  $('hudLow').textContent  = '₹' + candle.l.toFixed(2);
+  $('hudClose').textContent = '₹' + candle.c.toFixed(2);
+
+  const diff = candle.c - candle.o;
+  const pct = ((diff / candle.o) * 100).toFixed(2);
+  const isUp = candle.c >= candle.o;
+
+  const dirBadge = $('hudDirection');
+  if (isUp) {
+    dirBadge.className = 'px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800';
+    dirBadge.textContent = `▲ +₹${diff.toFixed(2)} (+${pct}%)`;
+  } else {
+    dirBadge.className = 'px-1.5 py-0.5 rounded text-[11px] font-bold bg-rose-950 text-rose-400 border border-rose-800';
+    dirBadge.textContent = `▼ -₹${Math.abs(diff).toFixed(2)} (${pct}%)`;
+  }
+}
+
+// Custom crisp candlestick renderer
+function drawCrispCandlesticks(ctx, chart, ohlcData) {
+  const xs = chart.scales.x;
+  const ys = chart.scales.y;
+  if (!xs || !ys) return;
+
+  const count = ohlcData.length;
+  // Calculate proportionate candle width with spacing
+  const availableWidth = xs.width / count;
+  const bodyWidth = Math.max(3, Math.min(14, availableWidth * 0.7));
+
+  ctx.save();
+
+  ohlcData.forEach((candle, index) => {
+    const x = xs.getPixelForValue(index);
+    const yOpen = ys.getPixelForValue(candle.o);
+    const yHigh = ys.getPixelForValue(candle.h);
+    const yLow = ys.getPixelForValue(candle.l);
+    const yClose = ys.getPixelForValue(candle.c);
+
+    const isBullish = candle.c >= candle.o;
+    const candleColor = isBullish ? '#10b981' : '#f43f5e'; // Clean Emerald / Rose
+
+    ctx.strokeStyle = candleColor;
+    ctx.fillStyle = candleColor;
+    ctx.lineWidth = 1.2;
+
+    // Wick
+    ctx.beginPath();
+    ctx.moveTo(x, yHigh);
+    ctx.lineTo(x, yLow);
+    ctx.stroke();
+
+    // Body
+    const top = Math.min(yOpen, yClose);
+    const height = Math.max(2, Math.abs(yClose - yOpen));
+    ctx.fillRect(x - bodyWidth / 2, top, bodyWidth, height);
+  });
+
+  ctx.restore();
+}
+
+Chart.register({
+  id: 'candlestickRenderer',
+  afterDraw(chart) {
+    if (chart.data && chart.data.ohlcData) {
+      drawCrispCandlesticks(chart.ctx, chart, chart.data.ohlcData);
+    }
+  }
 });
 
-// Load analysis on page load
 loadAnalysis();
 </script>
 

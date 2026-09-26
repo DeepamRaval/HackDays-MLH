@@ -1,104 +1,100 @@
-# Trading Assistant - Integrated Application
+# MLHTrade - AI-Powered Trading Intelligence & Technical Analytics
 
-A comprehensive stock analysis application with AI-powered chat assistant, integrated with Firebase, Python engine, and Gemini AI.
+A comprehensive market intelligence platform integrating **Snowflake Cortex AI**, **Google Gemini AI**, and high-precision financial technical analysis engines for Indian and Global Equities.
 
-## Features
+---
 
-- **Stock Analysis**: Technical indicators (EMA, SMA, RSI, Volatility, Support) using Python engine
-- **AI Chat Assistant**: Powered by Google Gemini AI for trading questions
-- **Firebase Integration**: Stores trading data and analysis history
-- **Modern UI**: Beautiful, responsive web interface
+## 🌟 Key Features
 
-## Project Structure
+- **Smart Technical Analysis**: 
+  - Dynamic Candlestick charting with real-time hovering HUD (Open, High, Low, Close, % Return).
+  - Technical indicators: Exponential Moving Average (EMA 20), Simple Moving Average (SMA 50), Relative Strength Index (RSI 14), Volatility, Support / Resistance levels.
+  - Automated Algorithmic Signal generation (**BUY**, **SELL**, or **HOLD**) with pattern breakdowns.
+  - Interactive multi-stage radar progress animations for market computations.
+- **AI Market Assistant**:
+  - Powered by **Snowflake Cortex LLMs** (`snowflake-arctic`, `llama3.1-70b`) with **Gemini AI** fallback.
+  - Formatted markdown tables, structured financial guidance, bulleted risk points, and intelligent analysis.
+- **Enterprise Query Engine & Audit History**:
+  - Secure Snowflake analytical querying capabilities.
+  - Session history viewer with individual deletion, bulk clear, and AI conversational intelligence summaries.
+- **Humanized, Modern Dark UI**:
+  - Built with Tailwind CSS, Chart.js, Lucide Icons, and typography tuned for trader focus.
+
+---
+
+## 🏗️ Project Architecture
 
 ```
-trading assistant/
+HackDays-MLH/
 ├── python/
-│   ├── backend.py          # Main Flask backend with all integrations
-│   ├── engine.py           # Python technical analysis engine
-│   ├── geminiModel.py       # Gemini AI model (reference)
-│   ├── serviceKey.json      # Firebase service account key
+│   ├── backend.py            # Flask backend application & API routes
+│   ├── engine.py             # Quantitative analysis engine (EMA, SMA, RSI, Signals)
+│   ├── snowflake_client.py   # Snowflake Cortex & SQL query client
+│   ├── geminiModel.py         # Google Gemini integration client
 │   └── templates/
-│       ├── index.html       # Main input form
-│       ├── result.html      # Analysis results page
-│       └── chat.html        # AI chat interface
-└── requirements.txt        # Python dependencies
+│       ├── index.html        # MLHTrade landing & analysis launcher
+│       ├── result.html       # Smart Technical Analysis & Candlestick dashboard
+│       ├── chat.html         # AI Market Chat Assistant
+│       └── history.html      # Analysis audit history & intelligence summary
+├── .env.example              # Template environment variables
+├── .gitignore                # Production ignore rules
+└── requirements.txt          # Python dependencies
 ```
 
-## Setup Instructions
+---
 
-### 1. Install Python Dependencies
+## 🚀 Getting Started
 
+### 1. Clone the Repository
 ```bash
+git clone https://github.com/DeepamRaval/HackDays-MLH.git
+cd HackDays-MLH
+```
+
+### 2. Set Up Virtual Environment & Dependencies
+```bash
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure Firebase
-
-Ensure `python/serviceKey.json` contains your Firebase service account credentials.
-
-### 3. Configure Gemini API Key
-
-Update the Gemini API key in `python/backend.py` (line 21) if needed:
-```python
-gemini_client = genai.Client(api_key="YOUR_API_KEY")
+### 3. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in your credentials:
+```bash
+cp .env.example .env
 ```
+
+Key environment variables:
+- `SNOWFLAKE_ACCOUNT`: Your Snowflake account identifier
+- `SNOWFLAKE_USER`: Snowflake username
+- `SNOWFLAKE_PASSWORD`: Snowflake password
+- `SNOWFLAKE_DATABASE`: Database name
+- `SNOWFLAKE_SCHEMA`: Schema name
+- `SNOWFLAKE_WAREHOUSE`: Compute warehouse
+- `SNOWFLAKE_ROLE`: Role name
+- `GEMINI_API_KEY`: Google Gemini API key
+
+*(Firebase `serviceKey.json` is optional for secondary Firestore storage).*
 
 ### 4. Run the Application
-
 ```bash
-cd python
-python backend.py
+python python/backend.py
 ```
+Visit `http://localhost:5000` (or `http://localhost:5002` if port 5000 is occupied).
 
-The application will be available at `http://localhost:5000`
+---
 
-## API Endpoints
+## 📡 API Endpoints
 
-### Frontend Routes
-- `GET /` - Main input form
-- `GET /analysis` - Analysis results page
-- `GET /chat` - AI chat interface
-- `POST /add_expense` - Submit stock analysis request
+- `GET /` - MLHTrade Home & Analysis Input
+- `GET /analysis` - Smart Technical Analysis Dashboard
+- `GET /chat` - Interactive AI Market Assistant
+- `GET /history` - Analysis History & Cortex Summary
+- `GET /api/analyze?stock=SYMBOL&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD` - Compute indicators and signals
+- `POST /api/chat` - Chat with Snowflake Cortex / Gemini AI
+- `POST /api/history/delete` - Remove individual or clear all history records
 
-### API Endpoints
-- `GET/POST /api/analyze?stock=SYMBOL&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD` - Get stock analysis
-- `POST /api/chat` - Chat with AI assistant (JSON: `{"message": "your question"}`)
+---
 
-## How It Works
-
-1. **Stock Analysis Flow**:
-   - User enters stock symbol and date range on homepage
-   - Data is saved to Firebase
-   - Backend fetches stock data using yfinance
-   - Python engine calculates technical indicators
-   - Results displayed on analysis page
-
-2. **Chat Assistant Flow**:
-   - User asks questions in chat interface
-   - Backend sends query to Gemini AI
-   - Response displayed in chat interface
-
-## Technical Stack
-
-- **Backend**: Flask (Python)
-- **Database**: Firebase Firestore
-- **AI**: Google Gemini AI
-- **Stock Data**: yfinance
-- **Technical Analysis**: Python engine (NumPy-based)
-- **Frontend**: HTML, CSS, JavaScript
-
-## Notes
-
-- For Indian stocks, use symbols like "TCS", "RELIANCE" (backend adds .NS suffix automatically)
-- For US stocks, use symbols like "AAPL", "GOOGL"
-- Ensure date ranges are valid and contain trading data
-- The application uses pure Python for technical analysis, making it compatible with cloud hosting platforms like Render
-
-## Troubleshooting
-
-1. **Import errors**: Ensure all Python dependencies are installed via `pip install -r requirements.txt`
-2. **Firebase errors**: Check `serviceKey.json` credentials
-3. **Gemini API errors**: Verify API key is valid
-4. **Stock data errors**: Check stock symbol and date range validity
-
+## 🛡️ License & Disclaimers
+This project was developed for HackDays MLH. Stock market investments are subject to market risks; all AI analysis and algorithmic signals are for informational and hackathon evaluation purposes.

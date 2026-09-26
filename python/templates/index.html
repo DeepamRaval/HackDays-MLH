@@ -1,238 +1,263 @@
-<!--
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Trading Data</title>
-</head>
-<body>
-    <h2>Add Trading Data</h2>
-
-    <form action="/add_expense" method="POST">
-        <label>Stock Name:</label><br>
-        <input type="text" name="stockName" required><br><br>
-
-        <label>Date From:</label><br>
-        <input type="date" name="dateFrom" required><br><br>
-
-        <label>Date To:</label><br>
-        <input type="date" name="dateTo" required><br><br>
-
-        <button type="submit">Submit</button>
-    </form>
-</body>
-</html>
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>H2S Stock Analyzer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-        :root {
-            --orange: #e77d26;
-            --light: #ebf0f1;
-            --gray: #bec4c6;
-            --blue: #344a5e;
-            --dark: #222d40;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Segoe UI", sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, var(--dark), var(--blue));
-            color: var(--light);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ===== Header ===== */
-        header {
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(6px);
-        }
-
-        header h1 {
-            color: var(--orange);
-            letter-spacing: 1px;
-        }
-
-        header span {
-            color: var(--gray);
-            font-size: 14px;
-        }
-
-        /* ===== Main Section ===== */
-        main {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 20px;
-        }
-
-        .analyzer-card {
-            background: var(--light);
-            color: var(--dark);
-            width: 100%;
-            max-width: 500px;
-            padding: 35px;
-            border-radius: 18px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .analyzer-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-        }
-
-        .analyzer-card h2 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: var(--blue);
-        }
-
-        .analyzer-card p {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        /* ===== Inputs ===== */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            color: var(--blue);
-            font-weight: 600;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 10px;
-            border: 1.5px solid var(--gray);
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--orange);
-            box-shadow: 0 0 0 3px rgba(231, 125, 38, 0.2);
-        }
-
-        /* ===== Button ===== */
-        .analyze-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--orange), #ff9f45);
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .analyze-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(231, 125, 38, 0.5);
-        }
-
-        .analyze-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* ===== Footer ===== */
-        footer {
-            background: rgba(0,0,0,0.25);
-            color: var(--gray);
-            text-align: center;
-            padding: 15px 20px;
-            font-size: 13px;
-        }
-
-        footer span {
-            color: var(--orange);
-            font-weight: 600;
-        }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 480px) {
-            .analyzer-card {
-                padding: 25px;
+  <meta charset="UTF-8">
+  <title>MLHTrade | Stock Intelligence & Technical Analysis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#0284c7', // Sky 600
+              dark: '#0369a1',
             }
+          }
         }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b0f17;
+      /* Subtle institutional trading grid & chart watermark background */
+      background-image: 
+        radial-gradient(rgba(14, 165, 233, 0.04) 1px, transparent 0),
+        linear-gradient(to bottom, rgba(11, 15, 23, 0.75), rgba(11, 15, 23, 0.98)),
+        url("https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1600&auto=format&fit=crop");
+      background-size: 24px 24px, 100% 100%, cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+      cursor: pointer;
+    }
+  </style>
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col text-slate-100 font-sans antialiased">
 
-<header>
-    <h1>H2S Stock Analyzer</h1>
-    <div>
-        <span style="margin-right: 20px;">Smart • Fast • Educational</span>
-        <a href="/chat" style="text-decoration: none; color: var(--gray); font-size: 14px; transition: 0.3s;">💬 Chat Assistant</a>
+<!-- ── Navigation Bar ── -->
+<header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 sm:px-12 py-3.5 flex justify-between items-center sticky top-0 z-30">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center font-bold text-white tracking-wider text-sm shadow-sm">
+      M
     </div>
+    <span class="text-white text-lg font-semibold tracking-tight">MLHTrade</span>
+    <span class="text-xs text-slate-500 font-medium px-2 py-0.5 rounded border border-slate-800 ml-1">Terminal</span>
+  </div>
+  <nav class="flex items-center gap-6 text-sm">
+    <a href="/chat" class="text-slate-400 hover:text-white transition-colors duration-150">Assistant</a>
+    <a href="/history" class="text-slate-400 hover:text-white transition-colors duration-150">History</a>
+  </nav>
 </header>
 
-<main>
-    <div class="analyzer-card">
-        <h2>Analyze a Stock</h2>
-        <p>Enter stock details to generate technical analysis insights</p>
-        <form action="/add_expense" method="POST">
-        <div class="form-group">
-            <label for="stock">Stock Name / Symbol</label>
-            <input type="text" id="stock" name="stockName" placeholder="e.g. TCS, RELIANCE, AAPL" required>
-        </div>
+<!-- ── Main Workspace ── -->
+<main class="flex-1 flex flex-col items-center justify-center px-4 py-12 max-w-5xl mx-auto w-full">
 
-        <div class="form-group">
-            <label for="start">Start Date</label>
-            <input type="date" id="start" name="dateFrom" onkeydown="return false;" required>
-        </div>
-
-        <div class="form-group">
-            <label for="end">End Date</label>
-            <input type="date" id="end" name="dateTo" onkeydown="return false;" required>
-        </div>
-
-        <button type="submit" class="analyze-btn">Go to Analyzed Data →</button>
-    </form>
+  <!-- Hero Header Section -->
+  <div class="text-center mb-8 max-w-2xl">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-950/80 border border-sky-800 text-[11px] font-mono text-sky-400 mb-3">
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+      ALGORITHMIC EQUITY RESEARCH TERMINAL
     </div>
+    <h1 class="text-3xl sm:text-5xl font-semibold tracking-tight text-white mb-3">
+      Institutional Technical Analysis
+    </h1>
+    <p class="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-lg mx-auto">
+      Synthesize historical price action, moving average spreads, momentum divergence, and support floors with Snowflake Cortex intelligence.
+    </p>
+  </div>
+
+  <!-- Form Card -->
+  <div class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-xl p-6 sm:p-7 shadow-2xl backdrop-blur-sm">
+    <form id="analysisForm" action="/add_expense" method="POST" class="flex flex-col gap-4">
+
+      <!-- Symbol -->
+      <div>
+        <label for="stock" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider">
+          Stock Symbol
+        </label>
+        <input
+          type="text"
+          id="stock"
+          name="stockName"
+          placeholder="e.g. TCS, RELIANCE, SWIGGY, NSE, AAPL"
+          required
+          autocomplete="off"
+          class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors uppercase"
+        />
+      </div>
+
+      <!-- Date Range -->
+      <div class="grid grid-cols-2 gap-3.5">
+        <div>
+          <label for="start" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider">
+            From Date
+          </label>
+          <input
+            type="date"
+            id="start"
+            name="dateFrom"
+            required
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors [color-scheme:dark]"
+          />
+        </div>
+
+        <div>
+          <label for="end" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider">
+            To Date
+          </label>
+          <input
+            type="date"
+            id="end"
+            name="dateTo"
+            required
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors [color-scheme:dark]"
+          />
+        </div>
+      </div>
+
+      <!-- Validation Banner (Client-side) -->
+      <div id="dateValidationNotice" class="hidden bg-rose-950/40 border border-rose-800/60 rounded-lg p-2.5 text-xs text-rose-300"></div>
+
+      <!-- Submit Action -->
+      <button
+        type="submit"
+        id="submitBtn"
+        class="w-full mt-1 bg-sky-600 hover:bg-sky-500 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition-colors duration-150 active:scale-[0.99] flex items-center justify-center gap-2"
+      >
+        <span>Run Technical Analysis</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Informative Section: How Technical Analysis Works -->
+  <div class="mt-16 w-full max-w-4xl">
+    <div class="text-center mb-8">
+      <h2 class="text-xs uppercase tracking-widest text-sky-400 font-semibold mb-1">Methodology & Architecture</h2>
+      <p class="text-xl sm:text-2xl font-semibold text-slate-100">How MLHTrade Analyzes Equities</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Pillar 1 -->
+      <div class="bg-slate-900/80 border border-slate-800/90 rounded-xl p-5 flex flex-col justify-between backdrop-blur-xs">
+        <div>
+          <div class="w-8 h-8 rounded-lg bg-sky-950 border border-sky-800/80 flex items-center justify-center text-sky-400 mb-3 text-sm font-bold font-mono">
+            01
+          </div>
+          <h3 class="text-sm font-semibold text-slate-200 mb-1.5">Dual Moving Average Trend</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Computes fast Exponential Moving Average (EMA 0.1) and benchmark Simple Moving Average (SMA). Bullish crossovers indicate upward momentum, while trailing spreads highlight trend fatigue.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 text-[11px] text-slate-500 font-mono">
+          Indicator: EMA(α=0.1) vs SMA(Mean)
+        </div>
+      </div>
+
+      <!-- Pillar 2 -->
+      <div class="bg-slate-900/80 border border-slate-800/90 rounded-xl p-5 flex flex-col justify-between backdrop-blur-xs">
+        <div>
+          <div class="w-8 h-8 rounded-lg bg-sky-950 border border-sky-800/80 flex items-center justify-center text-sky-400 mb-3 text-sm font-bold font-mono">
+            02
+          </div>
+          <h3 class="text-sm font-semibold text-slate-200 mb-1.5">RSI Momentum & Volatility</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Evaluates the 14-period Relative Strength Index to identify overbought (>70) and oversold (<30) zones, coupled with standard deviation variance to classify trade volatility and risk tier.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 text-[11px] text-slate-500 font-mono">
+          Indicator: 14-Period RSI & σ/SMA
+        </div>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="bg-slate-900/80 border border-slate-800/90 rounded-xl p-5 flex flex-col justify-between backdrop-blur-xs">
+        <div>
+          <div class="w-8 h-8 rounded-lg bg-sky-950 border border-sky-800/80 flex items-center justify-center text-sky-400 mb-3 text-sm font-bold font-mono">
+            03
+          </div>
+          <h3 class="text-sm font-semibold text-slate-200 mb-1.5">Snowflake Cortex Synthesis</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Key local peaks and troughs isolate dynamic support floors and resistance ceilings. Snowflake Cortex (Llama 3.1) synthesizes all metrics into an autonomous trading signal and rationale.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 text-[11px] text-slate-500 font-mono">
+          Engine: Cortex Llama 3.1 70B
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
-<footer>
-    ⚠️ <span>Disclaimer:</span> This stock analyzer is for educational purposes only.
-    It does not provide real-time data or financial advice.
+<!-- ── Footer ── -->
+<footer class="border-t border-slate-900 bg-slate-950/70 py-4 text-center text-xs text-slate-500 mt-auto">
+  MLHTrade is designed for financial education and computational research. Not financial advice.
 </footer>
+
+<script>
+  // Enforce historical limits: Max date is today
+  const today = new Date().toISOString().split('T')[0];
+  const startDateInput = document.getElementById('start');
+  const endDateInput = document.getElementById('end');
+  const noticeBox = document.getElementById('dateValidationNotice');
+  const form = document.getElementById('analysisForm');
+
+  startDateInput.max = today;
+  endDateInput.max = today;
+
+  // Defaults: last 90 days to today
+  const defaultStart = new Date();
+  defaultStart.setDate(defaultStart.getDate() - 90);
+  startDateInput.value = defaultStart.toISOString().split('T')[0];
+  endDateInput.value = today;
+
+  function validateDates() {
+    const startVal = startDateInput.value;
+    const endVal = endDateInput.value;
+
+    if (!startVal || !endVal) return true;
+
+    if (startVal > today || endVal > today) {
+      noticeBox.textContent = "Future dates are not allowed. Please enter a valid date range up to today.";
+      noticeBox.classList.remove('hidden');
+      return false;
+    }
+
+    if (startVal > endVal) {
+      noticeBox.textContent = "Start date cannot be after End date. Please select a valid date range.";
+      noticeBox.classList.remove('hidden');
+      return false;
+    }
+
+    noticeBox.classList.add('hidden');
+    return true;
+  }
+
+  startDateInput.addEventListener('change', validateDates);
+  endDateInput.addEventListener('change', validateDates);
+
+  form.addEventListener('submit', function(e) {
+    if (!validateDates()) {
+      e.preventDefault();
+    }
+  });
+</script>
 
 {% if error %}
 <script>
-    alert("{{ error }}");
+  alert("{{ error }}");
 </script>
 {% endif %}
 
 </body>
 </html>
-

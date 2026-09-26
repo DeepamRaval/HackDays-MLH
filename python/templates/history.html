@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLHTrade | Historical Database & Cortex Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background-color: #0b0f17; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-100 font-sans antialiased">
+
+<!-- ── Navigation Bar ── -->
+<header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md px-6 sm:px-12 py-3.5 flex justify-between items-center sticky top-0 z-30">
+  <div class="flex items-center gap-3">
+    <a href="/" class="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center font-bold text-white tracking-wider text-sm shadow-sm hover:bg-sky-500 transition-colors">
+      M
+    </a>
+    <span class="text-white text-lg font-semibold tracking-tight">MLHTrade</span>
+    <span class="text-xs text-slate-500 font-medium px-2 py-0.5 rounded border border-slate-800 ml-1">Historical Intelligence</span>
+  </div>
+  <nav class="flex items-center gap-6 text-sm">
+    <a href="/" class="text-slate-400 hover:text-white transition-colors duration-150">Terminal</a>
+    <a href="/chat" class="text-slate-400 hover:text-white transition-colors duration-150">Assistant</a>
+  </nav>
+</header>
+
+<!-- ── Main Workspace ── -->
+<main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
+
+  <!-- Overview -->
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-lg font-semibold text-slate-100">Ask Your Analysis History</h1>
+      <p class="text-xs text-slate-400 mt-1 max-w-lg leading-relaxed">
+        Ask natural-language questions about past calculations, signals, and stock evaluations. Powered by Snowflake Cortex.
+      </p>
+    </div>
+    <!-- Remove / Clear History Button -->
+    <button
+      id="clearHistoryBtn"
+      onclick="confirmClearHistory()"
+      class="border border-slate-800 hover:border-rose-900/80 hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-center"
+    >
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+      <span>Clear History</span>
+    </button>
+  </div>
+
+  <!-- Query Input Panel -->
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-3">
+    <label for="historyInput" class="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+      Natural Language Query
+    </label>
+    <div class="flex gap-2.5">
+      <input
+        id="historyInput"
+        type="text"
+        placeholder="e.g. Which stocks had RSI over 70? Or show my last 5 analyses"
+        class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors"
+        onkeydown="if(event.key==='Enter') askHistory()"
+      />
+      <button
+        id="askBtn"
+        onclick="askHistory()"
+        class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-4 py-2.5 rounded-lg text-xs sm:text-sm transition-colors disabled:opacity-50"
+      >
+        Ask
+      </button>
+    </div>
+
+    <!-- Suggested Queries -->
+    <div class="flex flex-wrap gap-2 pt-1 items-center">
+      <span class="text-[11px] text-slate-500">Quick queries:</span>
+      <button onclick="usePrompt(this)" data-q="Show my last 5 analyses"
+        class="bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 text-xs px-2.5 py-1 rounded transition-colors">
+        last 5 analyses
+      </button>
+      <button onclick="usePrompt(this)" data-q="Which stocks had RSI over 70?"
+        class="bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 text-xs px-2.5 py-1 rounded transition-colors">
+        RSI &gt; 70
+      </button>
+      <button onclick="usePrompt(this)" data-q="Which stocks got a BUY signal?"
+        class="bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 text-xs px-2.5 py-1 rounded transition-colors">
+        BUY signals
+      </button>
+      <button onclick="usePrompt(this)" data-q="What was the highest EMA I analyzed?"
+        class="bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 text-xs px-2.5 py-1 rounded transition-colors">
+        highest EMA
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <div id="loadingSkeleton" class="hidden flex flex-col gap-2.5 py-8 items-center">
+    <div class="w-6 h-6 border-2 border-slate-700 border-t-sky-500 rounded-full animate-spin"></div>
+    <span class="text-xs text-slate-400 font-medium">Consulting Cortex historical records…</span>
+  </div>
+
+  <!-- Results Section: Formatted Answer Only (Clean Presentation) -->
+  <div id="resultsSection" class="hidden flex flex-col gap-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-800/80 pb-2.5">
+        <div class="flex items-center gap-2">
+          <div class="w-5 h-5 rounded bg-sky-950 border border-sky-800 flex items-center justify-center text-sky-400 text-[10px] font-mono font-bold">
+            AI
+          </div>
+          <span class="text-xs font-semibold text-slate-200">Historical Intelligence Summary</span>
+        </div>
+        <span id="rowCountBadge" class="text-[11px] font-mono text-slate-500"></span>
+      </div>
+
+      <!-- Formatted Output Container -->
+      <div id="cortexAnswer" class="text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- Error Card -->
+  <div id="errorCard" class="hidden bg-slate-900 border border-rose-900/60 rounded-xl p-4 sm:p-5 flex gap-3 items-start">
+    <div class="w-6 h-6 rounded bg-rose-950 border border-rose-800 text-rose-400 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">!</div>
+    <div>
+      <p class="font-semibold text-xs text-rose-400 uppercase tracking-wider mb-0.5">Query Notice</p>
+      <p id="errorMsg" class="text-xs sm:text-sm text-rose-300 leading-relaxed"></p>
+    </div>
+  </div>
+
+  <!-- Recent Analyses History Grid -->
+  <div>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-slate-200">
+        Stored Historical Logs
+      </h2>
+      <span class="text-[11px] text-slate-500">Snowflake Records</span>
+    </div>
+
+    <div id="recentTable" class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-950 text-slate-400 uppercase text-[11px] border-b border-slate-800">
+            <tr>
+              <th class="px-4 py-2.5">Symbol</th>
+              <th class="px-4 py-2.5">From</th>
+              <th class="px-4 py-2.5">To</th>
+              <th class="px-4 py-2.5">EMA</th>
+              <th class="px-4 py-2.5">SMA</th>
+              <th class="px-4 py-2.5">RSI</th>
+              <th class="px-4 py-2.5">Signal</th>
+              <th class="px-4 py-2.5">Risk</th>
+              <th class="px-4 py-2.5">Recorded At</th>
+            </tr>
+          </thead>
+          <tbody id="recentBody" class="divide-y divide-slate-800/60 text-slate-300 font-mono text-[11px]"></tbody>
+        </table>
+      </div>
+      <p id="recentNone" class="hidden text-center text-slate-500 py-6 text-xs">No records stored yet.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer class="border-t border-slate-900 bg-slate-950/50 py-3 text-center text-xs text-slate-500">
+  MLHTrade is designed for financial education and computational research.
+</footer>
+
+<script>
+function usePrompt(el) {
+  document.getElementById('historyInput').value = el.dataset.q;
+  askHistory();
+}
+
+async function askHistory() {
+  const question = document.getElementById('historyInput').value.trim();
+  if (!question) return;
+
+  hide('resultsSection');
+  hide('errorCard');
+  show('loadingSkeleton');
+  document.getElementById('askBtn').disabled = true;
+
+  try {
+    const res = await fetch('/api/ask_history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    const data = await res.json();
+
+    hide('loadingSkeleton');
+    document.getElementById('askBtn').disabled = false;
+
+    if (data.error) {
+      document.getElementById('errorMsg').textContent = data.error;
+      show('errorCard');
+      return;
+    }
+
+    const rowCount = (data.rows || []).length;
+    document.getElementById('rowCountBadge').textContent = `${rowCount} record${rowCount !== 1 ? 's' : ''} evaluated`;
+
+    // Format the answer text cleanly: split bullets / lines and render structured cards
+    const answerContainer = document.getElementById('cortexAnswer');
+    answerContainer.innerHTML = formatPleasingAnswer(data.answer || 'No textual summary generated.', data.rows);
+
+    show('resultsSection');
+  } catch (err) {
+    hide('loadingSkeleton');
+    document.getElementById('askBtn').disabled = false;
+    document.getElementById('errorMsg').textContent = err.message;
+    show('errorCard');
+  }
+}
+
+function formatPleasingAnswer(text, rows) {
+  if (!text) return '<p class="text-slate-400">No details available.</p>';
+
+  // If Cortex returned rows, we can also render a clean visual card grid of the actual records!
+  let cardsHtml = '';
+  if (rows && rows.length > 0) {
+    cardsHtml = `
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3">
+        ${rows.map((r, i) => {
+          const sym = r.STOCK_SYMBOL || r.stock_symbol || '—';
+          // Check signal from row, otherwise if query asked for BUY, reflect BUY
+          let sig = r.SIGNAL || r.signal;
+          if (!sig) {
+            sig = 'RECORDED';
+          }
+          const rsi = r.RSI ?? r.rsi;
+          const ema = r.EMA ?? r.ema;
+          const sma = r.SMA ?? r.sma;
+          const risk = r.RISK || r.risk || '—';
+          const df = r.DATE_FROM || r.date_from || '—';
+          const dt = r.DATE_TO || r.date_to || '—';
+          const sigClass = sig === 'BUY' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
+                           sig === 'SELL' ? 'bg-rose-950 text-rose-400 border-rose-800' :
+                           sig === 'HOLD' ? 'bg-amber-950 text-amber-400 border-amber-800' :
+                           'bg-sky-950 text-sky-400 border-sky-800';
+
+          return `
+            <div class="bg-slate-950 border border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-sky-400 text-sm tracking-wide">${sym}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${sigClass}">${sig}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 space-y-1 mb-2 font-mono">
+                <div>Period: <span class="text-slate-300">${df} → ${dt}</span></div>
+                <div class="flex gap-3">
+                  <span>RSI: <strong class="text-slate-200">${rsi != null ? (typeof rsi === 'number' ? rsi.toFixed(1) : rsi) : '—'}</strong></span>
+                  <span>EMA: <strong class="text-slate-200">${ema != null ? (typeof ema === 'number' ? ema.toFixed(1) : ema) : '—'}</strong></span>
+                  <span>SMA: <strong class="text-slate-200">${sma != null ? (typeof sma === 'number' ? sma.toFixed(1) : sma) : '—'}</strong></span>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-500 border-t border-slate-900 pt-1.5 flex justify-between">
+                <span>Risk: <span class="text-slate-400">${risk}</span></span>
+                <span>${(r.CREATED_AT || r.created_at || '').substring(0, 10)}</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // Parse markdown from the LLM answer
+  let parsedText = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-100 font-semibold">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code class="bg-slate-950 border border-slate-800 px-1 py-0.5 rounded text-sky-400 text-xs font-mono">$1</code>');
+
+  const rawLines = parsedText.split('\n');
+  let bodyHtml = '';
+  let inList = false;
+
+  for (let l of rawLines) {
+    let clean = l.trim();
+    if (!clean) continue;
+
+    clean = formatHighlightTags(clean);
+
+    // Section title / header
+    if (clean.startsWith('###') || (clean.startsWith('<strong') && clean.endsWith('</strong>') && !clean.includes('•'))) {
+      if (inList) { bodyHtml += '</ul>'; inList = false; }
+      const title = clean.replace(/^###\s*/, '');
+      bodyHtml += `<h4 class="text-xs uppercase tracking-wider font-semibold text-sky-400 mt-3 mb-1.5 border-b border-slate-800/80 pb-1">${title}</h4>`;
+    }
+    // Bullet items
+    else if (clean.startsWith('* ') || clean.startsWith('- ') || clean.startsWith('• ') || /^\d+\.\s/.test(clean)) {
+      if (!inList) {
+        bodyHtml += '<ul class="space-y-1.5 my-2">';
+        inList = true;
+      }
+      const content = clean.replace(/^[•*-]\s*/, '').replace(/^\d+\.\s*/, '');
+      bodyHtml += `
+        <li class="flex items-start gap-2.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-400 mt-2 flex-shrink-0"></span>
+          <span class="text-slate-300 text-xs sm:text-sm leading-relaxed">${content}</span>
+        </li>
+      `;
+    } else {
+      if (inList) { bodyHtml += '</ul>'; inList = false; }
+      bodyHtml += `<p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-2">${clean}</p>`;
+    }
+  }
+  if (inList) bodyHtml += '</ul>';
+
+  return `
+    <div>
+      ${bodyHtml}
+      ${cardsHtml}
+    </div>
+  `;
+}
+
+function formatHighlightTags(str) {
+  return str
+    .replace(/\bBUY\b/g, '<span class="text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-800 text-[10px]">BUY</span>')
+    .replace(/\bSELL\b/g, '<span class="text-rose-400 font-bold px-1.5 py-0.5 rounded bg-rose-950/80 border border-rose-800 text-[10px]">SELL</span>')
+    .replace(/\bHOLD\b/g, '<span class="text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-800 text-[10px]">HOLD</span>');
+}
+
+// Clear History Feature
+async function confirmClearHistory() {
+  if (!confirm("Are you sure you want to remove all stored stock analysis history? This cannot be undone.")) {
+    return;
+  }
+
+  const btn = document.getElementById('clearHistoryBtn');
+  btn.disabled = true;
+  btn.textContent = "Clearing…";
+
+  try {
+    const res = await fetch('/api/clear_history', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      alert("Analysis history has been cleared.");
+      hide('resultsSection');
+      loadRecent();
+    } else {
+      alert("Error: " + (data.error || "Failed to clear history"));
+    }
+  } catch (e) {
+    alert("Network error: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+      <span>Clear History</span>
+    `;
+  }
+}
+
+async function loadRecent() {
+  try {
+    const res = await fetch('/api/analyses');
+    const data = await res.json();
+    const rows = data.analyses || [];
+
+    const body = document.getElementById('recentBody');
+    const noneMsg = document.getElementById('recentNone');
+
+    if (rows.length === 0) {
+      body.innerHTML = '';
+      noneMsg.classList.remove('hidden');
+      return;
+    }
+
+    noneMsg.classList.add('hidden');
+    const fmt = v => v == null ? '—' : (typeof v === 'number' ? v.toFixed(2) : v);
+    const signalBadge = s => {
+      const cls = s === 'BUY' ? 'text-emerald-400' :
+                  s === 'SELL' ? 'text-rose-400' : 'text-amber-400';
+      return `<span class="font-bold ${cls}">${s || '—'}</span>`;
+    };
+
+    body.innerHTML = rows.map(r => `
+      <tr class="hover:bg-slate-800/40 transition-colors">
+        <td class="px-4 py-2 font-bold text-sky-400">${r.STOCK_SYMBOL || r.stock_symbol || '—'}</td>
+        <td class="px-4 py-2 text-slate-400">${r.DATE_FROM || r.date_from || '—'}</td>
+        <td class="px-4 py-2 text-slate-400">${r.DATE_TO || r.date_to || '—'}</td>
+        <td class="px-4 py-2">${fmt(r.EMA ?? r.ema)}</td>
+        <td class="px-4 py-2">${fmt(r.SMA ?? r.sma)}</td>
+        <td class="px-4 py-2">${fmt(r.RSI ?? r.rsi)}</td>
+        <td class="px-4 py-2">${signalBadge(r.SIGNAL || r.signal)}</td>
+        <td class="px-4 py-2 text-slate-400">${r.RISK || r.risk || '—'}</td>
+        <td class="px-4 py-2 text-slate-500">${(r.CREATED_AT || r.created_at || '').substring(0, 19)}</td>
+      </tr>`).join('');
+  } catch (err) {
+    console.error('Could not load recent analyses:', err);
+  }
+}
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+loadRecent();
+document.getElementById('historyInput').focus();
+</script>
+
+</body>
+</html>
